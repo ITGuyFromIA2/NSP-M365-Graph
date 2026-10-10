@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 (unreleased)
+
+- `Send-NSPGraphMail`: one sendMail request as a mailbox through the active transport, with To/Cc/Bcc,
+  Text or HTML body, and file attachments. Their total size is checked before anything is sent.
+
 ## 0.1.0
 
 - `Connect-NSPGraph` extracted from NSP-IntuneApps with its tests.
