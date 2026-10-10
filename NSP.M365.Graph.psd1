@@ -24,8 +24,8 @@
     PrivateData = @{
         PSData = @{
             Tags = @('MicrosoftGraph', 'M365', 'Entra', 'NSP')
-            ProjectUri = 'https://github.com/ITGuyFromIA2/NSP-Graph'
-            LicenseUri = 'https://github.com/ITGuyFromIA2/NSP-Graph/blob/main/LICENSE'
+            ProjectUri = 'https://github.com/ITGuyFromIA2/NSP-M365-Graph'
+            LicenseUri = 'https://github.com/ITGuyFromIA2/NSP-M365-Graph/blob/main/LICENSE'
             ReleaseNotes = '0.1.1: Send-NSPGraphMail - one sendMail request as a mailbox, with file attachments (size checked before sending).'
         }
     }

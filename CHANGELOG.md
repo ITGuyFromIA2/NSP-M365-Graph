@@ -4,6 +4,8 @@
 
 - `Send-NSPGraphMail`: one sendMail request as a mailbox through the active transport, with To/Cc/Bcc,
   Text or HTML body, and file attachments. Their total size is checked before anything is sent.
+- Repository renamed NSP-Graph -> NSP-M365-Graph, so the folder matches the module name the way the
+  shared sibling loader expects (NSP.M365.Graph -> NSP-M365-Graph). ProjectUri / LicenseUri updated.
 
 ## 0.1.0
 
