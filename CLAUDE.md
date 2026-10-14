@@ -22,3 +22,18 @@ Toolkit B4 in `C:\GitRepo\PoSHRepo\ClaudeStuff\04_Toolkit_Candidates.md`. The fi
 ## Testing
 
 Pester 5+. Run `.\tools\Test-Repo.ps1`.
+
+## Publishing (not adopted yet - do this on next use)
+
+This repo isn't on the shared NSP release routine yet. Before its next release, adopt it the way
+the published toolkit repos have (NSP-Console, NSP-Toolkit, NSP-ActiveDirectory, NSP-Bootstrap):
+
+- Add `tools\Publish-ToGallery.ps1`: the same thin wrapper those repos carry, which imports
+  NSP.RepoTools and runs `Publish-NSPModule` on this repo. Copy it as-is; all the logic stays in
+  NSP.RepoTools.
+- Dry run first: `.\tools\Publish-ToGallery.ps1 -WhatIf` runs every check (manifest, changelog,
+  clean tree, Gallery version, client references across history, `tools\Test-Repo.ps1`, staged
+  5.1 import) and publishes nothing.
+- At release, change the CHANGELOG heading from `## <version> (unreleased)` to `## <version>`;
+  the routine refuses an unreleased heading.
+- Needs a GitHub remote first if the repo has none (the manifest's ProjectUri should point at it).
