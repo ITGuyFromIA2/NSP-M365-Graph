@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 (unreleased)
+## 0.1.1 (2026-10-28)
 
 - `Send-NSPGraphMail`: one sendMail request as a mailbox through the active transport, with To/Cc/Bcc,
   Text or HTML body, and file attachments. Their total size is checked before anything is sent.
