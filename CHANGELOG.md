@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 (2026-11-02)
 
 - Add optional app-only ContextScope forwarding and returned-scope validation. Omitting it
   preserves existing SDK scope selection. Add isolated offline regression coverage.
