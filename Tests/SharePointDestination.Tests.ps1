@@ -31,10 +31,18 @@ Describe 'Find-NSPGraphSite' {
         $token | Should -Not -Match '[=/+]'
     }
 
-    It 'finds the site behind a library' {
-        Set-NSPGraphTransport -Name Fake -Responder { @{ id = 'root-1'; webUrl = 'https://contoso.sharepoint.com/lib'; parentReference = @{ siteId = 'host,sc,web' } } }
-        (Find-NSPGraphSite -DriveId 'drive-1').SiteId | Should -Be 'host,sc,web'
-        @((Get-NSPGraphTransport).CallLog)[0].Uri | Should -BeLike 'v1.0/drives/drive-1/root*'
+    It 'finds the site behind a library from its SharePoint IDs, not the root item' {
+        Set-NSPGraphTransport -Name Fake -Responder {
+            @{ id = 'drive-1'; name = 'Documents'; webUrl = 'https://contoso.sharepoint.com/sites/scans/Shared%20Documents'
+                sharePointIds = @{ siteUrl = 'https://contoso.sharepoint.com/sites/scans'; siteId = '11111111-aaaa-bbbb-cccc-000000000001'; webId = '22222222-aaaa-bbbb-cccc-000000000002' } }
+        }
+        (Find-NSPGraphSite -DriveId 'drive-1').SiteId | Should -Be 'contoso.sharepoint.com,11111111-aaaa-bbbb-cccc-000000000001,22222222-aaaa-bbbb-cccc-000000000002'
+        @((Get-NSPGraphTransport).CallLog)[0].Uri | Should -BeLike 'v1.0/drives/drive-1?*sharePointIds*'
+    }
+
+    It 'fails clearly when a library returns no SharePoint IDs (a root item has no parent site)' {
+        Set-NSPGraphTransport -Name Fake -Responder { @{ id = 'drive-1'; name = 'Documents'; parentReference = @{} } }
+        { Find-NSPGraphSite -DriveId 'drive-1' } | Should -Throw '*did not return its SharePoint site IDs*'
     }
 
     It 'rejects a link that is not SharePoint' {

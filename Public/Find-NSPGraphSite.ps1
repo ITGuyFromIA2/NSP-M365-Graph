@@ -25,8 +25,15 @@ function Find-NSPGraphSite {
     )
 
     if ($PSCmdlet.ParameterSetName -eq 'Drive') {
-        $root = Invoke-NSPGraphRequest -Uri "drives/$([uri]::EscapeDataString($DriveId))/root?`$select=id,webUrl,parentReference"
-        return [pscustomobject]@{ SiteId = [string]$root['parentReference']['siteId']; DriveId = $DriveId; ItemId = [string]$root['id']; Name = $null; WebUrl = [string]$root['webUrl']; IsFolder = $true }
+        # A library root has no parent, so the site comes from the drive's SharePoint IDs, combined
+        # into Graph's site ID form: hostname,site collection ID,web ID.
+        $drive = Invoke-NSPGraphRequest -Uri "drives/$([uri]::EscapeDataString($DriveId))?`$select=id,name,webUrl,sharePointIds"
+        $ids = $drive['sharePointIds']
+        if (-not $ids -or -not $ids['siteUrl'] -or -not $ids['siteId'] -or -not $ids['webId']) { throw "Library $DriveId did not return its SharePoint site IDs; it may not be a SharePoint document library." }
+        return [pscustomobject]@{
+            SiteId = '{0},{1},{2}' -f ([uri][string]$ids['siteUrl']).Host, $ids['siteId'], $ids['webId']
+            DriveId = $DriveId; ItemId = 'root'; Name = [string]$drive['name']; WebUrl = [string]$drive['webUrl']; IsFolder = $true
+        }
     }
 
     if ($PSCmdlet.ParameterSetName -eq 'Search') {
