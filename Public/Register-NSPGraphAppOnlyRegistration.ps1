@@ -24,13 +24,18 @@ function Register-NSPGraphAppOnlyRegistration {
         for SYSTEM (creating it needs an elevated session), or Cert:\CurrentUser\My for a user
         account. The record (<RecordDirectory>\<TenantId>.json) holds the client ID and thumbprint,
         never a key.
+
+        An empty -ApplicationPermissions list registers an app with no Graph permissions, for an
+        app whose access is granted elsewhere, such as Exchange RBAC for Applications scoped to one
+        mailbox (Set-NSPGraphMailSendScope). Those grants add to any Entra grant, so leaving Graph
+        Mail.Send out is what keeps such an app scoped.
     .EXAMPLE
         Register-NSPGraphAppOnlyRegistration -AppName 'NSP-M365-ConditionalAccess-Coverage' -ApplicationPermissions 'User.Read.All', 'GroupMember.ReadWrite.All' -RecordDirectory $dir
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param(
         [Parameter(Mandatory)][string]$AppName,
-        [Parameter(Mandatory)][string[]]$ApplicationPermissions,
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$ApplicationPermissions,
         [Parameter(Mandatory)][string]$RecordDirectory,
         [string]$CertificateStore = 'Cert:\LocalMachine\My',
         [ValidateRange(1, 180)][int]$RenewWithinDays = 30,
@@ -75,12 +80,14 @@ function Register-NSPGraphAppOnlyRegistration {
 
     $graphSp = @(Get-Filtered 'servicePrincipals' "appId eq '$graphAppId'" 'id,appRoles')[0]
     if (-not $graphSp) { throw 'The Microsoft Graph service principal could not be resolved in this tenant.' }
-    $roles = foreach ($name in $ApplicationPermissions) {
+    $roles = @(foreach ($name in $ApplicationPermissions) {
         $role = @(Get-NSPGraphItem $graphSp 'appRoles' | Where-Object { $_['value'] -ceq $name })[0]
         if (-not $role) { throw "Application permission '$name' was not found on the Microsoft Graph service principal." }
         @{ Name = $name; Id = $role['id'] }
-    }
-    $requiredResourceAccess = @(@{ resourceAppId = $graphAppId; resourceAccess = @($roles | ForEach-Object { @{ id = $_.Id; type = 'Role' } }) })
+    })
+    $requiredResourceAccess = @(if ($roles.Count) {
+        @{ resourceAppId = $graphAppId; resourceAccess = @($roles | ForEach-Object { @{ id = $_.Id; type = 'Role' } }) }
+    })
 
     $record = if (Test-Path -LiteralPath $recordPath) { Get-Content -LiteralPath $recordPath -Raw | ConvertFrom-Json } else { $null }
     $appSelect = 'id,appId,displayName,requiredResourceAccess,keyCredentials'

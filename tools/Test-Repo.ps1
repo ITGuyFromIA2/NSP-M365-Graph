@@ -56,7 +56,7 @@ if (@($hits).Count) {
 }
 
 Write-Host "`n=== Parser ===" -ForegroundColor Cyan
-$parseFailures = foreach ($file in Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Include '*.ps1', '*.psm1', '*.psd1') {
+$parseFailures = foreach ($file in (Get-ChildItem -LiteralPath $repoRoot -Recurse -File | Where-Object Extension -In @('.ps1','.psm1','.psd1'))) {
     if ($file.FullName -match '\\\.git\\') { continue }
     $errors = $null
     [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$null, [ref]$errors) | Out-Null
@@ -78,6 +78,9 @@ if ($windowsPowerShell) {
 } else {
     Write-Warning 'Windows PowerShell 5.1 is unavailable on this host; its import check was skipped.'
 }
+
+# This contract runs without SDK imports or live authentication, before optional test dependencies.
+& (Join-Path $PSScriptRoot 'Test-AppOnlyContextScope.ps1')
 
 function Test-Dependency {
     param([string]$Name, [version]$Min)

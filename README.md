@@ -43,8 +43,47 @@ the local store is re-sent on each update. That makes one job host per tenant. T
 (`<RecordDirectory>\<TenantId>.json`) holds the client ID, service principal ID, and certificate
 thumbprint; it never holds a key.
 
+### Sending as one mailbox
+
+Mail.Send granted in Entra reaches every mailbox in the tenant. To let an unattended job send as a
+single mailbox:
+
+1. Find the sender with `Find-NSPGraphMailbox -Search scan` (read-only; `-Address` for an exact
+   lookup). `MailboxHint` comes from sign-in and license state, not from Exchange.
+2. Register the app with `-ApplicationPermissions @()`, so it has no Graph permission at all.
+3. Run `Set-NSPGraphMailSendScope -ClientId ... -ServicePrincipalId ... -Mailbox ... -Connect`. It plans
+   first; add `-Execute` to create the Exchange service principal, a management scope for that
+   mailbox's primary address, and an `Application Mail.Send` assignment on that scope.
+
+Exchange RBAC grants add to Entra grants, so the function refuses while the app still holds Graph
+Mail.Send in Entra. It also refuses when an Application Mail.Send assignment already exists on
+another scope or none. Results are checked with `Test-ServicePrincipalAuthorization`. Exchange can
+take up to two hours before sendMail honors a new assignment. This function needs
+ExchangeOnlineManagement; nothing else in the module does.
+
 ## Validation
 
 ```powershell
 .\tools\Test-Repo.ps1
 ```
+
+## Certificate authentication context
+
+`Connect-NSPGraphAppOnly` accepts optional `-ContextScope Process` or `-ContextScope CurrentUser`.
+Omitting it preserves the SDK's existing scope-selection behavior; this module assigns no default.
+An explicit choice is forwarded and the returned context must match that choice as well as the
+requested tenant, application and AppOnly authentication type. A mismatch fails without retry.
+
+Process confines authentication to the current PowerShell session. CurrentUser allows persistence
+across sessions. This choice does not grant permissions or make a certificate/private key accessible
+to another account. The SDK must already be installed; the app-only connector does not install it.
+See Microsoft's [authentication commands](https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands).
+
+```powershell
+Connect-NSPGraphAppOnly -ClientId $record.ClientId -TenantId $record.TenantId `
+    -CertificateThumbprint $record.CertificateThumbprint -ContextScope Process
+```
+
+The isolated `tools/Test-AppOnlyContextScope.ps1` regression shadows SDK commands locally and uses
+synthetic identities. It can run directly under PowerShell 5.1 or 7 without the SDK, certificates,
+tenant access or test-framework installation, and is included in `tools/Test-Repo.ps1`.

@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- Add optional app-only ContextScope forwarding and returned-scope validation. Omitting it
+  preserves existing SDK scope selection. Add isolated offline regression coverage.
+- `Find-NSPGraphMailbox`: read-only search, or exact address lookup, for mail-enabled member
+  accounts, with a LikelyShared/LicensedUser hint from sign-in and license state.
+- `Set-NSPGraphMailSendScope`: plan-first Exchange RBAC for Applications setup so an app sends as one
+  mailbox only. Refuses while an unscoped Entra Mail.Send grant exists; verifies with
+  Test-ServicePrincipalAuthorization.
+- `Register-NSPGraphAppOnlyRegistration` accepts an empty `-ApplicationPermissions` list, for apps
+  whose access is granted outside Graph.
+- `Invoke-NSPGraphRequest` / `Invoke-NSPGraphCollection`: optional `-Headers` (for example
+  ConsistencyLevel for `$search`).
+
 ## 0.1.1 (2026-10-28)
 
 - `Send-NSPGraphMail`: one sendMail request as a mailbox through the active transport, with To/Cc/Bcc,

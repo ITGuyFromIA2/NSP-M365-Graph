@@ -73,6 +73,18 @@ Describe 'Register-NSPGraphAppOnlyRegistration' {
         (Invoke-Register).Status | Should -Be 'AlreadyRegistered'
     }
 
+    It 'registers an app with no Graph permissions and consents nothing' {
+        $state = Use-FakeTenant
+        $plan = Invoke-Register -Permissions @()
+        $plan.Actions | Should -Be @('CreateCertificate', 'CreateApplication', 'CreateServicePrincipal', 'UploadCertificates')
+        $result = Invoke-Register -Permissions @() -Execute
+        $result.Status | Should -Be 'Created'
+        @($state.Applications[0].requiredResourceAccess).Count | Should -Be 0
+        $state.RoleAssignments.Count | Should -Be 0
+        Mock Get-NSPGraphAppCertificate { @(Get-TestCertificate 'NEW0000000000000000000000000000000000001' 365) } -ModuleName NSP.M365.Graph
+        (Invoke-Register -Permissions @()).Status | Should -Be 'AlreadyRegistered'
+    }
+
     It 'renews a certificate near expiry and keeps the old one uploaded until it expires' {
         $state = Use-FakeTenant
         Invoke-Register -Execute | Out-Null

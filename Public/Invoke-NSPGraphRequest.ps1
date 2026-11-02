@@ -11,6 +11,8 @@ function Invoke-NSPGraphRequest {
 
         This function does not ask for confirmation. Callers that write to a tenant are expected
         to gate the call behind their own approved plan.
+
+        -Headers adds request headers, such as ConsistencyLevel = 'eventual' for $search.
     .EXAMPLE
         Invoke-NSPGraphRequest -Uri 'identity/conditionalAccess/policies/00000000-0000-0000-0000-000000000000'
     .EXAMPLE
@@ -21,14 +23,15 @@ function Invoke-NSPGraphRequest {
         [ValidateSet('GET', 'POST', 'PATCH', 'PUT', 'DELETE')][string]$Method = 'GET',
         [Parameter(Mandatory)][string]$Uri,
         [ValidateSet('v1.0', 'beta')][string]$ApiVersion = 'v1.0',
-        [object]$Body
+        [object]$Body,
+        [hashtable]$Headers
     )
 
     $resolvedUri = if ($Uri -match '^https://') { $Uri } else { "$ApiVersion/$($Uri.TrimStart('/'))" }
     $transport = $script:NSPGraphTransport
 
     if ($transport.Name -eq 'Fake') {
-        $transport.CallLog.Add([pscustomobject]@{ Method = $Method; Uri = $resolvedUri; Body = $Body })
+        $transport.CallLog.Add([pscustomobject]@{ Method = $Method; Uri = $resolvedUri; Body = $Body; Headers = $Headers })
         return & $transport.Responder $Method $resolvedUri $Body
     }
 
@@ -38,6 +41,7 @@ function Invoke-NSPGraphRequest {
         OutputType = 'HashTable'
         ErrorAction = 'Stop'
     }
+    if ($Headers) { $requestArgs.Headers = $Headers }
     if ($PSBoundParameters.ContainsKey('Body')) {
         $requestArgs.Body = if ($Body -is [string]) { $Body } else { ConvertTo-Json -InputObject $Body -Depth 32 -Compress }
         $requestArgs.ContentType = 'application/json'
