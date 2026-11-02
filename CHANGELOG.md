@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.3 (unreleased)
+
+- `Find-NSPGraphSite`: read-only site search, link resolution (shares API) and the site behind a
+  library, returning site, drive and item IDs.
+- `Get-NSPGraphDriveFolder`: read-only listing of a site's document libraries or a folder's
+  subfolders.
+- `New-NSPGraphDriveFolder`: creates one folder, failing rather than renaming on a name conflict.
+- `Grant-NSPGraphSitePermission`: plan-first Sites.Selected site permission (read or write) for one
+  app. It upgrades a weaker grant, never touches other apps' permissions, and leaves an equal or
+  stronger grant alone.
+
 ## 0.1.2 (2026-11-02)
 
 - Add optional app-only ContextScope forwarding and returned-scope validation. Omitting it
