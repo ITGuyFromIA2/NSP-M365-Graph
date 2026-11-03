@@ -6,6 +6,8 @@
 Toolkit B4 in `C:\GitRepo\PoSHRepo\ClaudeStuff\04_Toolkit_Candidates.md`. The first consumer is
 `NSP-PoSHToolkits\NSP-M365-ConditionalAccess` (see its PLAN.md, "Graph layer").
 
+Read `docs/GraphLessons.md` before changing Graph code.
+
 ## Hard rules
 
 - Windows PowerShell 5.1 is the floor. The module must import on a bare host; Graph SDK modules are not

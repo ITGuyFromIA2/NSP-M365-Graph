@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4 (unreleased)
+
+- `docs/GraphLessons.md`: Graph lessons from the consuming tools, each with its source, linked from
+  the README.
+
 ## 0.1.3 (2026-11-03)
 
 - `Find-NSPGraphSite`: read-only site search, link resolution (shares API) and the site behind a

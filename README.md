@@ -3,6 +3,9 @@
 Shared Microsoft Graph plumbing for NSP M365 tools (`NSP.M365.ConditionalAccess`, and later
 `NSP.M365.IntuneApps` and `NSP.M365.IntuneManager`). Supports Windows PowerShell 5.1 and PowerShell 7.
 
+**Before writing Graph code, read [docs/GraphLessons.md](docs/GraphLessons.md).** It collects what
+the consuming tools have already paid to learn, with a source for each lesson.
+
 | Command | Purpose |
 |---|---|
 | `Connect-NSPGraph` | Connect as a delegated app, or validate the existing context, for a tool's complete scope list. Reconnects only when the session is missing a scope or belongs to a different app or tenant. |
