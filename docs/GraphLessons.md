@@ -189,10 +189,16 @@ Sources: NSP-Toolkit `Private/ScanBridgeAlertSetup.ps1`; Coordination *(private)
 ### Resolve the version inside your own module
 
 Observed. ScanBridge's worker imported an older installed copy inside its module scope even with a
-newer copy imported globally. Import inside your module's scope with `-MinimumVersion`, which also
-skips an older copy earlier on `PSModulePath`, and call the command through the imported module.
+newer copy imported globally. Name a minimum version; `-MinimumVersion` also skips an older copy
+earlier on `PSModulePath`.
 
-Sources: NSP-ScanBridge `Private/Connect-NSPScanBridgeContext.ps1`; the live-auth note above.
+Two patterns are in use. Tool modules load this one through the shared `Import-NSPToolkitModule`,
+which imports globally on purpose, so one session cannot hold two versions; pass it
+`-MinimumVersion`. ScanBridge runs unattended and imports inside its own scope, then calls the
+command through the imported module. Choose one per tool.
+
+Sources: NSP-ScanBridge `Private/Connect-NSPScanBridgeContext.ps1`; the live-auth note above;
+NSP-Toolkit `Private/Import-NSPToolkitModule.ps1`.
 
 ### A long-lived shell keeps old code
 
