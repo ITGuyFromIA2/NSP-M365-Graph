@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.3 (unreleased)
+## 0.1.3 (2026-11-03)
 
 - `Find-NSPGraphSite`: read-only site search, link resolution (shares API) and the site behind a
   library, returning site, drive and item IDs.
