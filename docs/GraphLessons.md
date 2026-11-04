@@ -67,6 +67,46 @@ Sources: `Public/Set-NSPGraphMailSendScope.ps1` here; NSP-Toolkit
 `Private/ScanBridgeAlertSetup.ps1`; Coordination *(private)*
 `coordination/notes/2026-11-03_from-scanbridge_to-ptmaster_alert-test-passed.md`.
 
+### A write can be only half of the change
+
+By design. Check what actually completes the operation before you report success. Setting
+`onPremisesImmutableId` does not link a user. It stages a hard match, and Entra decides at the next
+sync, and can refuse there. A read-back proves the value landed, not the link, so NSP.M365.UserPairing
+reads `applied` after the write and `linked` only once the user is seen synced.
+
+Revalidation has to expect your own result. A check that compares the object with the review state
+will call a successful write a change. Writing the write path exposed exactly that in the pairing
+queue, which would have thrown every written pair back to review.
+
+Sources: Microsoft Learn, "Configure Microsoft Entra Connect for an existing tenant"; NSP-M365-UserPairing
+*(private)* `Public/Sync-NSPEntraPairingQueue.ps1`.
+
+## Hard match
+
+### Entra refuses more than the old scripts knew
+
+By design, and not yet seen live here. Since 1 July 2026 Entra blocks a hard match in the cloud when the target user
+has `onPremisesObjectIdentifier` set, holds a privileged role, or is eligible for one. It also blocks
+every hard match when `blockCloudObjectTakeoverThroughHardMatchEnabled` is on. The check runs for both
+Connect Sync and Cloud Sync, whatever the client version. A write-only script succeeds and the failure
+surfaces later, as an export error on the sync server.
+
+Do not build an override for these. Microsoft's route is to remove the role or eligibility, sync, then
+restore it. Check eligibility as well as assignments, and expand role-assignable groups.
+
+Reading these takes care:
+
+- `onPremisesObjectIdentifier` is used by Microsoft's beta recovery steps and is not on the documented
+  user resource. Treat a missing key as unknown, not as clear.
+- `directory/onPremisesSynchronization` supports only delegated access, and only Global Administrator.
+- `roleEligibilitySchedules` depends on a PIM licence. How it fails without one has not been observed.
+- `onPremisesSyncEnabled` is three-valued: true is synced, false was synced once, null is cloud-only.
+- `onPremisesImmutableId` is a sensitive property, and only specific roles can set it.
+
+Sources: Microsoft Learn, "Configure Microsoft Entra Connect for an existing tenant", "Troubleshoot
+errors during synchronization", "Get onPremisesDirectorySynchronization", "Working with users in
+Microsoft Graph"; NSP-M365-UserPairing *(private)* `Private/Test-NSPEntraHardMatchPair.ps1`.
+
 ## Paging and large reads
 
 ### A partial read is not a result
@@ -280,3 +320,12 @@ unserialized, and logs `-Headers` without passing them, so assert headers from `
 
 Sources: NSP-M365-ConditionalAccess *(private)* `CLAUDE.md` "Testing";
 `Public/Invoke-NSPGraphRequest.ps1` here.
+
+### A wrong fake passes for the wrong reason
+
+Observed. In `-like`, `?` matches any one character, so `'*users?*'` also matches `users/c1`, and a
+fake routed a single-user read to its list branch. Escape it as `'*users[?]*'`.
+`.GetNewClosure()` moves a scriptblock into its own module scope: it loses `$script:` variables and
+functions from your test file. Capture what it needs in a local variable first.
+
+Sources: NSP-M365-UserPairing *(private)* `Tests/HardMatch.Tests.ps1`, `Tests/ADIntegration.Tests.ps1`.

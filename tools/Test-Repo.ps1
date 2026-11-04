@@ -27,8 +27,8 @@ $manifestPath = Join-Path $repoRoot 'NSP.M365.Graph.psd1'
 $failed = $false
 
 function Get-ModuleSourceFile {
-    Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Include '*.ps1', '*.psm1', '*.psd1', '*.json', '*.md' |
-        Where-Object { $_.FullName -notmatch '\\\.git\\' }
+    Get-ChildItem -LiteralPath $repoRoot -Recurse -File |
+        Where-Object { $_.Extension -in @('.ps1', '.psm1', '.psd1', '.json', '.md') -and $_.FullName -notmatch '\\\.git\\' }
 }
 
 Write-Host "`n=== Client-data gate ===" -ForegroundColor Cyan
