@@ -14,6 +14,7 @@ the consuming tools have already paid to learn, with a source for each lesson.
 | `Invoke-NSPGraphCollection` | Every page of a collection, following `@odata.nextLink`. |
 | `Register-NSPGraphAppRegistration` | Tenant bootstrap for a tool's own single-tenant, delegated public-client app: redirect URIs including the WAM broker URI, required permissions, service principal, and an admin consent grant that is only ever topped up. Plan-only without `-Execute`; never adopts an unrecorded app of the same name unless `-AdoptClientId` says so. |
 | `Register-NSPGraphAppOnlyRegistration` | Tenant bootstrap for an unattended job's app: application permissions (admin-consented role assignments) and a non-exportable certificate created on the job host. Plan-only without `-Execute`; re-running within 30 days of expiry renews the certificate. |
+| `Remove-NSPGraphMailboxContact` | Backs up, then deletes, every contact in one mailbox (default folder and subfolders) through `$batch`, with throttling retry and a read-back. Asks first; `-WhatIf` gives inventory and backup only. |
 | `Set-NSPGraphTransport` / `Get-NSPGraphTransport` | Choose the transport: `MgGraphRequest` (default) or `Fake` (a scriptblock answers each request and the calls are logged, for offline tests). |
 
 ```powershell
@@ -63,6 +64,28 @@ Mail.Send in Entra. It also refuses when an Application Mail.Send assignment alr
 another scope or none. Results are checked with `Test-ServicePrincipalAuthorization`. Exchange can
 take up to two hours before sendMail honors a new assignment. This function needs
 ExchangeOnlineManagement; nothing else in the module does.
+
+### Clearing a mailbox's contacts before a re-import
+
+`Remove-NSPGraphMailboxContact -UserId <address>` inventories the default Contacts folder and every
+folder below it, writes all contacts to a JSON backup (default
+`%LOCALAPPDATA%\NSP\ContactBackup`), checks the backup's count, and only then deletes. Run it with
+`-WhatIf` first for the inventory and backup alone. It asks before deleting (`ConfirmImpact = High`).
+
+- Deletes go in `$batch` requests of 20. Sub-requests answered 429 or 5xx are retried after
+  `Retry-After`; 404 counts as already gone; anything else is returned in `Failed`.
+- After deleting it re-reads every folder, with waits, and reports `Remaining`. `Completed` is true
+  only when nothing is left and nothing failed.
+- Default deletion moves contacts to Deleted Items. `-Permanent` uses `permanentDelete` (Purges
+  folder in Recoverable Items).
+- It needs an existing Graph session with `Contacts.ReadWrite`: application permission for another
+  user's mailbox, delegated for your own. Phones syncing contacts through ActiveSync lose them too.
+
+```powershell
+Connect-NSPGraphAppOnly -TenantId $tenant -ClientId $app -CertificateThumbprint $thumb
+Remove-NSPGraphMailboxContact -UserId user@contoso.example -WhatIf   # inventory + backup
+Remove-NSPGraphMailboxContact -UserId user@contoso.example           # backup, confirm, delete
+```
 
 ## Validation
 

@@ -1,7 +1,13 @@
 # Changelog
 
-## 0.1.4 (unreleased)
+## 0.1.4 (2026-11-18)
 
+- `Remove-NSPGraphMailboxContact`: clears a mailbox's personal contacts before a re-import. Inventory
+  of the default Contacts folder and all subfolders, a verified JSON backup before any delete,
+  `$batch` deletes of 20 with Retry-After handling for 429/5xx, 404 counted as already gone, and a
+  read-back with waits. Moves to Deleted Items by default; `-Permanent` uses `permanentDelete`.
+  `ConfirmImpact = High`; `-WhatIf` gives inventory and backup only.
+- Private `Invoke-NSPGraphRetryGet`: GET retried on 429/5xx (Retry-After, else 2, 4, 8 ... s).
 - `docs/GraphLessons.md`: Graph lessons from the consuming tools, each with its source, linked from
   the README.
 
